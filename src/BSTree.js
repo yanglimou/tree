@@ -7,34 +7,48 @@ class Node {
 }
 
 export class Tree {
+    constructor(canvas) {
+        this.canvas = canvas
+        this.root = null
+    }
     add(num) {
-        if (!this.root) {
-            this.root = new Node(num, null, null)
+        this.root = this._add(this.root, num)
+        this._draw()
+    }
+    _add(node, num) {
+        if (!node) return new Node(num)
+        if (num > node.val) {
+            node.right = this._add(node.right, num)
+        } else if (num < node.val) {
+            node.left = this._add(node.left, num)
+        }
+        return node
+    }
+    remove(num) {
+        this.root = this._remove(this.root, num)
+        this._draw()
+    }
+    _remove(node, num) {
+        if (!node) return node
+        if (num > node.val) {
+            node.right = this._remove(node.right, num)
+        } else if (num < node.val) {
+            node.left = this._remove(node.left, num)
         } else {
-            let temp = this.root
-            while (temp) {
-                if (temp.val === num) {
-                    return
-                } else if (num < temp.val) {
-                    if (temp.left) {
-                        temp = temp.left
-                    } else {
-                        temp.left = new Node(num, null, null)
-                        return
-                    }
-                } else {
-                    if (temp.right) {
-                        temp = temp.right
-                    } else {
-                        temp.right = new Node(num, null, null)
-                        return
-                    }
+            if (node.left && node.right) {
+                let cur = node.left
+                while (cur.right) {
+                    cur = cur.right
                 }
+                node.val = cur.val
+                node.left = this._remove(node.left, cur.val)
+            } else {
+                node = node.left || node.right
             }
         }
-        console.log(this.root)
+        return node
     }
-    getLocationMap() {
+    _getLocationMap() {
         let map = new Map()
         if (!this.root) {
             return map
@@ -51,17 +65,18 @@ export class Tree {
         console.log(map)
         return map
     }
-    draw(canvas) {
+    _draw() {
+        const ctx = this.canvas.getContext("2d")
+        ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
         if (!this.root) {
-            return map
+            return
         }
-        const ctx = canvas.getContext("2d")
         ctx.fillStyle = '#ff0000';
         ctx.font = '20px Arial';
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         console.log(ctx)
-        const map = this.getLocationMap()
+        const map = this._getLocationMap()
         const getLocation = (node) => {
             const [x, y] = map.get(node.val)
             return [x * 20 + 20, y * 100 + 20]
